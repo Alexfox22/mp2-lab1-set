@@ -5,46 +5,83 @@
 //
 // Битовое поле
 
+
 #include "tbitfield.h"
 
 TBitField::TBitField(int len)
 {
+	if (len < 0) throw "length is negative";
+	BitLen = len;
+	MemLen = (len+31) >> 5;
+	pMem = new TELEM [MemLen];
+	if (pMem != 0)
+		for (int i = 0; i < MemLen; i++)
+			pMem[i] = 0;
+	
 }
 
 TBitField::TBitField(const TBitField &bf) // конструктор копирования
 {
+	BitLen = bf.BitLen;
+	MemLen = bf.MemLen;
+	pMem = new TELEM [MemLen];
+	if (pMem != 0)
+		for (int i = 0; i < MemLen; i++)
+			pMem[i] = bf.pMem[i];
 }
 
 TBitField::~TBitField()
 {
+	delete [] pMem;
+	pMem = NULL;
 }
 
 int TBitField::GetMemIndex(const int n) const // индекс Мем для бита n
 {
+	return n >> 5;
 }
 
 TELEM TBitField::GetMemMask(const int n) const // битовая маска для бита n
 {
+	TELEM tmp = 1;
+	return tmp << (n % 32);
 }
 
 // доступ к битам битового поля
 
 int TBitField::GetLength(void) const // получить длину (к-во битов)
 {
-  return 0;
+	return BitLen;
 }
 
 void TBitField::SetBit(const int n) // установить бит
 {
+	if ((n > -1)&&(n < BitLen))
+	{
+	int i = GetMemIndex(n);
+	pMem[i] = pMem[i] | GetMemMask(n);
+	}
+	else throw "sb negative or large index";
 }
 
 void TBitField::ClrBit(const int n) // очистить бит
 {
+	if ((n > -1)&&(n < BitLen))
+	{
+	int i = GetMemIndex(n);
+	pMem[i] = pMem[i] & ~GetMemMask(n);
+	}
+	else throw "clrb negative or large index";
 }
 
 int TBitField::GetBit(const int n) const // получить значение бита
 {
-  return 0;
+	if ((n > -1)&&(n < BitLen))
+	{int i = GetMemIndex(n);
+	return (pMem[i] & GetMemMask(n)) >> (n % 16);
+	}
+	else throw "gb negative or large index";
+	return 0;
 }
 
 // битовые операции
